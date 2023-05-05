@@ -1,3 +1,87 @@
+# Building on Pop!_OS 22.04 LTS + AMD GPU
+```bash
+# This script is intended for POP-OS!22.04
+# To be run as root
+
+# Downloading & installing the amdgpu installer
+wget https://repo.radeon.com/amdgpu-install/22.40.3/ubuntu/jammy/amdgpu-install_5.4.50403-1_all.deb
+dpkg -i amdgpu-install_5.4.50403-1_all.deb
+rm amdgpu-install_5.4.50403-1_all.deb
+
+# Replacing os id with ubuntu and installing opencl with rocm; than putting back POP id
+sed -i 's/ID=pop/ID=ubuntu/g' /etc/os-release
+amdgpu-install -y --accept-eula --usecase=rocm --no-dkms
+sed -i 's/ID=ubuntu/ID=pop/g' /etc/os-release
+
+# Addding user `sv` to groups video & renderer to run OpenCL without sudo/root
+# Might require restart to work
+gpasswd -a sv render
+gpasswd -a sv video
+
+# Linking the OpenCL library necessary for make tool
+ln -s /opt/rocm-5.4.3/lib/libOpenCL.so.1.2 /usr/lib/libOpenCL.so
+
+# Installing the other dependencies
+sudo apt install -y libssl-dev opencl-headers libcurl4-openssl-dev
+
+# Building the project
+git clone https://github.com/psabadac/vanitygen-plusplus.git
+cd vanitygen-plusplus
+make -B all
+
+# run it
+./oclvanitygen++
+clVanitygen PLUS PLUS v2.01 (OpenSSL 3.0.2 15 Mar 2022)
+Usage: ./oclvanitygen++ [-vqrik1NTS] [-d <device>] [-f <filename>|-] [<pattern>...]
+Generates a bitcoin receiving address matching <pattern>, and outputs the
+address and associated private key.  The private key may be stored in a safe
+location or imported into a bitcoin client to spend any balance received on
+the address.
+By default, <pattern> is interpreted as an exact prefix.
+By default, if no device is specified, and the system has exactly one OpenCL
+device, it will be selected automatically, otherwise if the system has
+multiple OpenCL devices and no device is specified, an error will be
+reported.  To use multiple devices simultaneously, specify the -D option for
+each device.
+
+Options:
+-v            Verbose output
+-q            Quiet output
+-r            Use regular expression match instead of prefix
+              (Feasibility of expression is not checked)
+-i            Case-insensitive prefix search
+-k            Keep pattern and continue search after finding a match
+-1            Stop after first match
+-a <amount>   Stop after generating <amount> addresses/keys
+-C <altcoin>  Generate an address for specific altcoin, use "-C LIST" to view
+              a list of all available altcoins, argument is case sensitive!
+-X <version>  Generate address with the given version
+-Y <version>  Specify private key version (-X provides public key)
+-F <format>   Generate address with the given format (pubkey, compressed)
+-P <pubkey>   Use split-key method with <pubkey> as base public key
+-e            Encrypt private keys, prompt for password
+-E <password> Encrypt private keys with <password> (UNSAFE)
+-p <platform> Select OpenCL platform
+-d <device>   Select OpenCL device
+-D <devstr>   Use OpenCL device, identified by device string
+              Form: <platform>:<devicenumber>[,<options>]
+              Example: 0:0,grid=1024x1024
+-S            Safe mode, disable OpenCL loop unrolling optimizations
+-w <worksize> Set work items per thread in a work unit
+-t <threads>  Set target thread count per multiprocessor
+-g <x>x<y>    Set grid size
+-b <invsize>  Set modular inverse ops per thread
+-V            Enable kernel/OpenCL/hardware verification (SLOW)
+-f <file>     File containing list of patterns, one per line
+              (Use "-" as the file name for stdin)
+-o <file>     Write pattern matches to <file>
+-s <file>     Seed random number generator from <file>
+-Z <prefix>   Private key prefix in hex (1Address.io Dapp front-running protection)
+-l <nbits>    Specify number of bits in prefix, only relevant when -Z is specified
+-z            Format output of matches in CSV(disables verbose mode)
+              Output as [COIN],[PREFIX],[ADDRESS],[PRIVKEY]
+```
+
 # Vanitygen plus plus
 Vanity address generator for BTC, ETH, LTC, TRX etc (more than 100 crypto currencies).
 
