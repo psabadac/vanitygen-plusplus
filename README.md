@@ -20,9 +20,10 @@ gpasswd -a sv video
 
 # Linking the OpenCL library necessary for make tool
 ln -s /opt/rocm-5.4.3/lib/libOpenCL.so.1.2 /usr/lib/libOpenCL.so
+ln -s /opt/rocm-5.4.3/include/CL /usr/include
 
 # Installing the other dependencies
-sudo apt install -y libssl-dev opencl-headers libcurl4-openssl-dev
+sudo apt install -y libssl-dev libcurl4-openssl-dev
 
 # Building the project
 git clone https://github.com/psabadac/vanitygen-plusplus.git
